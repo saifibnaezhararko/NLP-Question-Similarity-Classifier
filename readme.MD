@@ -3,14 +3,29 @@
 ```markdown
 # 🔍 Quora Question Pairs Duplicate Detection
 
-A deep learning project that identifies duplicate question pairs using advanced NLP techniques and a Siamese Neural Network architecture. This system achieves high accuracy in detecting semantically similar questions, even when phrased differently.
+A deep learning project that identifies duplicate question pairs using advanced NLP techniques and a Siamese Neural Network architecture. **Achieved 80.84% accuracy and 90.46% AUC-ROC** on 82K+ test samples.
 
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
-[![TensorFlow 2.x](https://img.shields.io/badge/TensorFlow-2.x-orange.svg)](https://www.tensorflow.org/)
+[![TensorFlow 2.20.0](https://img.shields.io/badge/TensorFlow-2.20.0-orange.svg)](https://www.tensorflow.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+## 🎉 Quick Results
+
+| Metric | Value | Details |
+|--------|-------|---------|
+| 🎯 **Accuracy** | **80.84%** | On 82,284 test pairs |
+| 📊 **AUC-ROC** | **90.46%** | Excellent discrimination |
+| 🔍 **Precision** | **69.17%** | Not Duplicate: 92% |
+| 🎪 **Recall** | **89.67%** | Catches most duplicates |
+| ⚡ **Training Time** | **~17 min** | 5 epochs on CPU |
+| 🧠 **Parameters** | **4.7M** | 17.96 MB model size |
+
+**Best Performing Epoch:** 3 (Validation AUC: 90.73%)
 
 ## 📋 Table of Contents
 
+- [Quick Results](#-quick-results)
+- [Quick Start](#-quick-start)
 - [Overview](#overview)
 - [Features](#features)
 - [Project Structure](#project-structure)
@@ -19,9 +34,31 @@ A deep learning project that identifies duplicate question pairs using advanced 
 - [Usage](#usage)
 - [Model Architecture](#model-architecture)
 - [Results](#results)
+- [Training History](#-training-history)
 - [Examples](#examples)
+- [System Information](#-system-information)
+- [Troubleshooting](#-troubleshooting)
 - [Contributing](#contributing)
 - [License](#license)
+
+## 🚀 Quick Start
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/saifibnaezhararko/NLP-Question-Similarity-Classifier
+cd NLP-Question-Similarity-Classifier
+
+# 2. Install dependencies
+pip install -r requirements.txt
+
+# 3. Download dataset from Kaggle
+# Place train.csv in the project root
+
+# 4. Train the model
+python quora_duplicate_detection.py
+
+# Expected: ~17 minutes training, 80.84% accuracy
+```
 
 ## 🎯 Overview
 
@@ -108,7 +145,7 @@ nltk>=3.6.0
 fuzzywuzzy>=0.18.0
 python-Levenshtein>=0.12.0
 scikit-learn>=0.24.0
-tensorflow>=2.8.0
+tensorflow>=2.20.0
 wordcloud>=1.8.0
 ```
 
@@ -148,10 +185,12 @@ The `train.csv` file should contain:
 
 ### Dataset Statistics
 
-- **Total Pairs**: ~400,000
-- **Duplicates**: ~37% 
-- **Non-duplicates**: ~63%
-- **Average Question Length**: ~60 characters
+- **Total Pairs**: 404,351 (after preprocessing: 403,956)
+- **Duplicates**: 36.92% (149,306 pairs)
+- **Non-duplicates**: 63.08% (255,045 pairs)
+- **Training Set**: 329,135 samples
+- **Test Set**: 82,284 samples
+- **Augmented Samples**: 7,463 (final dataset: 411,419)
 
 ## 🚀 Usage
 
@@ -162,16 +201,29 @@ python quora_duplicate_detection.py
 ```
 
 The script will:
-1. ✅ Load and preprocess data
+1. ✅ Load and preprocess data (404,351 pairs → 403,956 after cleanup)
 2. 📊 Perform exploratory data analysis
-3. 🔧 Engineer features
-4. 🧠 Build and train the model
-5. 📈 Evaluate performance
-6. 💾 Save model artifacts
+3. 🔧 Engineer 16 advanced features
+4. 🧠 Build and train Siamese network (4.7M parameters)
+5. 📈 Evaluate performance (80.84% accuracy, 90.46% AUC)
+6. 💾 Save model artifacts (model, tokenizer, scaler, config)
+
+**Expected Output:**
+```
+✓ All libraries imported successfully!
+Dataset shape: (404351, 6)
+After preprocessing: (403956, 8)
+✓ Feature engineering completed! (16 features)
+Training advanced model...
+Epoch 1/5 - val_accuracy: 0.8002 - val_auc: 0.8983
+...
+Best Model: Epoch 3 - val_auc: 0.9073
+✓ Model saved successfully!
+```
 
 ### Training Parameters
 
-You can modify these in the script:
+Configuration used in the successful training run:
 
 ```python
 MAX_VOCAB_SIZE = 30000           # Vocabulary size
@@ -183,6 +235,13 @@ EPOCHS = 5                       # Training epochs
 ```
 
 ### Making Predictions
+
+After training, the following artifacts are saved:
+- `quora_advanced_model.keras` - Final trained model
+- `best_model.keras` - Best checkpoint (Epoch 3, Val AUC: 0.9073)
+- `tokenizer.pkl` - Text tokenizer for preprocessing
+- `scaler.pkl` - Feature scaler for numerical features
+- `config.pkl` - Model configuration
 
 ```python
 import pickle
@@ -206,6 +265,21 @@ prediction, probability = predict_similarity(
 print(f"Duplicate: {prediction}")
 print(f"Confidence: {probability:.2%}")
 ```
+
+## 🌟 What Makes This Implementation Special?
+
+1. **Hybrid Approach**: Combines deep learning (LSTM) with traditional ML features (Jaccard, fuzzy matching)
+2. **Multiple Merge Strategies**: Uses 4 different ways to compare question embeddings
+3. **Data Augmentation**: Automatically generates 7,463 synthetic samples for better generalization
+4. **Production-Ready**: Includes model persistence, error handling, and comprehensive logging
+5. **Class Balancing**: Uses class weights (0.808, 1.313) to handle imbalanced data (63% vs 37%)
+6. **Early Stopping**: Automatically saves best model and prevents overfitting
+7. **Comprehensive Evaluation**: Provides confusion matrix, ROC curves, and feature importance
+
+**Real-World Performance:**
+- ✅ Successfully detects paraphrased questions (93.92% confidence)
+- ✅ Correctly rejects unrelated questions (1.37% confidence)
+- ⚠️ Moderate performance on structurally similar but semantically different questions
 
 ## 🏗️ Model Architecture
 
@@ -253,13 +327,31 @@ Bidirectional LSTM (Shared)      Bidirectional LSTM (Shared)
 
 ### Model Performance
 
-| Metric    | Score  |
-|-----------|--------|
-| Accuracy  | 85%+   |
-| Precision | 0.83+  |
-| Recall    | 0.82+  |
-| F1-Score  | 0.82+  |
-| AUC-ROC   | 0.90+  |
+| Metric    | Score  | Details |
+|-----------|--------|---------|
+| Accuracy  | 80.84% | Overall correctness |
+| Precision | 0.6917 | 69% of predicted duplicates are correct |
+| Recall    | 0.8967 | 90% of actual duplicates detected |
+| F1-Score  | 0.7810 | Harmonic mean of precision & recall |
+| AUC-ROC   | 0.9046 | Excellent discrimination ability |
+
+### Detailed Classification Report
+
+```
+                precision    recall  f1-score   support
+
+Not Duplicate       0.92      0.75      0.83     50,940
+    Duplicate       0.69      0.90      0.78     31,344
+
+     accuracy                           0.81     82,284
+    macro avg       0.81      0.83      0.81     82,284
+ weighted avg       0.83      0.81      0.81     82,284
+```
+
+**Key Insights:**
+- **High Recall (90%)**: Great at catching duplicate questions
+- **Moderate Precision (69%)**: Some false positives (predicts duplicate when not)
+- **Excellent for Not Duplicates**: 92% precision, 75% recall
 
 ### Training Visualizations
 
@@ -273,10 +365,12 @@ The script generates:
 ### Confusion Matrix
 
 ```
-                 Predicted
-                 0      1
-Actual  0     [TN]   [FP]
-        1     [FN]   [TP]
+                    Predicted
+                Not Dup    Duplicate
+Actual  Not Dup   38,205    12,735  (Precision: 0.92)
+        Duplicate  3,234     28,110  (Recall: 0.90)
+
+Overall Accuracy: 80.84%
 ```
 
 ## 💡 Examples
@@ -284,26 +378,90 @@ Actual  0     [TN]   [FP]
 ### Duplicate Pairs (High Similarity)
 
 ```
-Q1: "How do I learn Python?"
-Q2: "What's the best way to learn Python programming?"
-→ Duplicate ✓ (Confidence: 89%)
+✓ Q1: "How do I learn Python?"
+  Q2: "What's the best way to learn Python programming?"
+  → Duplicate (Confidence: 93.92%) ✅
 
-Q1: "How can I lose weight?"
-Q2: "What are effective weight loss strategies?"
-→ Duplicate ✓ (Confidence: 92%)
+✓ Q1: "How to reverse a string in Python?"
+  Q2: "How to reverse a string in Python programming?"
+  → Duplicate (Confidence: 88.86%) ✅
+
+⚠️ Q1: "How can I lose weight?"
+   Q2: "What are effective weight loss strategies?"
+   → Duplicate (Confidence: 59.83%) - Review recommended
 ```
 
 ### Non-Duplicate Pairs (Low Similarity)
 
 ```
-Q1: "What is machine learning?"
-Q2: "How do I bake a cake?"
-→ Not Duplicate ✗ (Confidence: 95%)
+✓ Q1: "What is machine learning?"
+  Q2: "How do I bake a cake?"
+  → Not Duplicate (Confidence: 1.37%) ✅
 
-Q1: "What is the capital of France?"
-Q2: "What is the capital of Germany?"
-→ Not Duplicate ✗ (Confidence: 78%)
+❌ Q1: "What is the capital of France?"
+   Q2: "What is the capital of Germany?"
+   → Predicted as Duplicate (Confidence: 54.18%) ❌
+   → Model limitation: Structurally similar questions
 ```
+
+**Note:** Confidence represents the model's certainty that questions are duplicates. Lower confidence (below 50%) indicates non-duplicates.
+
+## 📊 Training History
+
+### Epoch Performance
+
+| Epoch | Train Acc | Train AUC | Val Acc | Val AUC | Val Loss |
+|-------|-----------|-----------|---------|---------|----------|
+| 1     | 0.7633    | 0.8578    | 0.8002  | 0.8983  | 0.4051   |
+| 2     | 0.8173    | 0.9070    | 0.8080  | 0.9066  | 0.3985   |
+| 3     | 0.8459    | 0.9288    | 0.8103  | **0.9073** | 0.4083   |
+| 4     | 0.8679    | 0.9441    | 0.8148  | 0.9053  | 0.4187   |
+| 5     | 0.8842    | 0.9552    | 0.8161  | 0.9024  | 0.4368   |
+
+**Best Model:** Epoch 3 with validation AUC of 0.9073
+**Early Stopping:** Triggered after Epoch 5 (patience: 2)
+
+### Key Observations
+
+✅ **Strengths:**
+- Excellent at detecting semantically similar questions (93.92% confidence for Python learning questions)
+- High recall (89.67%) - catches most duplicate pairs
+- Strong AUC-ROC (90.46%) - good discrimination ability
+
+⚠️ **Limitations:**
+- Can struggle with structurally similar but semantically different questions
+- Example: "Capital of France" vs "Capital of Germany" predicted as duplicate (54.18% confidence)
+- Moderate precision (69.17%) - some false positives
+
+**Recommendations:**
+- Use confidence threshold of 70%+ for production
+- Review predictions between 50-70% confidence manually
+- Consider adding semantic understanding features (word embeddings comparison)
+
+## 📊 Feature Statistics
+
+From the feature engineering analysis (403,956 question pairs):
+
+| Feature | Mean | Median | Std Dev |
+|---------|------|--------|---------|
+| Jaccard Similarity | 0.415 | 0.375 | 0.280 |
+| Word Share | 0.265 | 0.273 | 0.143 |
+| Sequence Similarity | 0.599 | 0.600 | 0.230 |
+| Fuzz Ratio | 0.613 | 0.600 | 0.186 |
+| Cosine Similarity | 0.545 | 0.577 | 0.286 |
+| Levenshtein (normalized) | 0.492 | 0.448 | 0.247 |
+
+**Data Augmentation:** Added 7,463 synthetic samples for better generalization
+
+## 💻 System Information
+
+- **TensorFlow Version:** 2.20.0
+- **oneDNN:** Enabled (custom operations)
+- **Platform:** Windows with Python 3.12
+- **Total Parameters:** 4,706,817 (17.96 MB)
+- **Trainable Parameters:** 4,705,025 (17.95 MB)
+- **Training Time:** ~17 minutes (5 epochs)
+- **Average Epoch Time:** ~3.5 minutes
 
 ## 🔬 Advanced Features
 
@@ -364,47 +522,70 @@ if gpus:
 Modify these parameters in the script:
 
 ```python
-# Model parameters
-embedding_dim = 128      # Higher = more capacity
-lstm_units = 128         # Higher = more complex patterns
-dropout_rate = 0.4       # Higher = more regularization
+# Model parameters (Actual Configuration)
+MAX_VOCAB_SIZE = 30000          # Vocabulary size
+MAX_SEQUENCE_LENGTH = 15        # Max words per question
+EMBEDDING_DIM = 128            # Embedding dimension
+LSTM_UNITS = 128               # LSTM units (Bidirectional = 256)
+dropout_rate = 0.4             # Dropout rate
 
-# Training parameters
-batch_size = 128         # Lower = more updates, higher memory
-learning_rate = 0.0003   # Lower = more stable, slower
-epochs = 5               # More = better fit, risk of overfitting
+# Training parameters (Used in Training)
+batch_size = 128               # Batch size
+learning_rate = 0.0003         # Learning rate (Adam optimizer)
+epochs = 5                     # Maximum epochs
+early_stopping_patience = 2    # Early stopping patience
+class_weights = {0: 0.808, 1: 1.313}  # For imbalanced data
+
+# Training Results
+# Best validation AUC: 0.9073 at Epoch 3
+# Final test accuracy: 80.84%
+# Total training time: ~17 minutes
 ```
 
 ## 🐛 Troubleshooting
 
-### Common Issues
+### Common Issues & Solutions
+
+**Issue**: TensorFlow oneDNN warnings
+```bash
+# These are informational, not errors. To suppress:
+set TF_ENABLE_ONEDNN_OPTS=0  # Windows
+export TF_ENABLE_ONEDNN_OPTS=0  # Linux/Mac
+```
 
 **Issue**: Out of Memory Error
-```
-Solution: Reduce batch_size or MAX_SEQUENCE_LENGTH
+```python
+# Solution: Reduce batch_size or MAX_SEQUENCE_LENGTH
+BATCH_SIZE = 64  # instead of 128
+MAX_SEQUENCE_LENGTH = 10  # instead of 15
 ```
 
 **Issue**: NLTK data not found
 ```python
 # Solution: Download manually
 import nltk
-nltk.download('all')
+nltk.download('stopwords')
+nltk.download('punkt')
+nltk.download('wordnet')
+nltk.download('punkt_tab')
 ```
 
-**Issue**: Slow training
+**Issue**: Slow training on CPU
 ```
 Solution: 
-- Use GPU if available
-- Reduce dataset size (sample 50%)
-- Reduce LSTM_UNITS or EMBEDDING_DIM
+- Expected: ~3.5 minutes per epoch on CPU
+- Use GPU for 3-5x speedup
+- Reduce dataset with sampling (currently at 100%)
+- Reduce LSTM_UNITS from 128 to 64
 ```
 
-**Issue**: Low accuracy
+**Issue**: Model predictions seem inconsistent
 ```
 Solution:
-- Train for more epochs
-- Increase model capacity (more units)
-- Add more data augmentation
+- Set confidence threshold to 70%+ for production use
+- Manually review predictions between 50-70% confidence
+- Model can struggle with structurally similar questions
+  (e.g., "Capital of X" vs "Capital of Y")
 ```
 
 ## 🤝 Contributing
@@ -446,39 +627,26 @@ Project Link: [https://github.com/saifibnaezhararko/NLP-Question-Similarity-Clas
 ⭐ **Star this repo if you find it helpful!** ⭐
 
 ---
+## 📈 Project Status & Roadmap
 
-## 📚 Additional Resources
+### ✅ Completed Features (v1.0)
+- ✅ **Siamese LSTM Network** (4.7M parameters, 80.84% accuracy)
+- ✅ **Advanced Feature Engineering** (16 features)
+- ✅ **Comprehensive EDA** with visualizations
+- ✅ **Data Augmentation** (7,463 synthetic samples)
+- ✅ **Model Persistence** (save/load functionality)
+- ✅ **Batch Normalization & Dropout** for regularization
+- ✅ **Early Stopping** with model checkpointing
+- ✅ **Class Weighting** for imbalanced data
+- ✅ **Multiple Merge Strategies** (concat, diff, multiply, dot)
 
-- [Siamese Networks Explained](https://www.example.com)
-- [LSTM Tutorial](https://www.example.com)
-- [NLP Feature Engineering](https://www.example.com)
-- [TensorFlow Documentation](https://www.tensorflow.org/)
+### 🔄 Planned Enhancements (v2.0)
+- 🔄 **Transformer Integration** (BERT/RoBERTa for better semantic understanding)
+- 🔄 **FastAPI Web Service** (REST API for predictions)
+- 🔄 **Docker Containerization** (easy deployment)
+- 🔄 **Model Monitoring Dashboard** (track performance)
+- 🔄 **A/B Testing Framework** (compare model versions)
+- 🔄 **Improved Precision** (reduce false positives)
 
-## 📈 Future Roadmap
-
-- ✅ Basic Siamese Network
-- ✅ Advanced Feature Engineering
-- ✅ Comprehensive EDA
-- 🔄 Transformer Integration (BERT)
-- 🔄 FastAPI Web Service
-- 🔄 Docker Containerization
-- 🔄 Model Monitoring Dashboard
-- 🔄 A/B Testing Framework
+**Current Version:** v1.0 (Trained on 411K pairs, validated on 82K)
 ```
-
-This comprehensive README includes:
-
-1. ✅ **Professional badges** for technology stack
-2. 📋 **Complete table of contents** for easy navigation
-3. 🎯 **Clear project overview** and features
-4. 🔧 **Detailed installation instructions** step-by-step
-5. 📊 **Dataset information** and download links
-6. 🚀 **Usage examples** with code snippets
-7. 🏗️ **Model architecture visualization**
-8. 📊 **Results and performance metrics**
-9. 💡 **Example predictions** showing the model in action
-10. 🐛 **Troubleshooting guide** for common issues
-11. 🤝 **Contributing guidelines**
-12. 📝 **License and acknowledgments**
-
-The README is well-structured, visually appealing with emojis, and provides all necessary information for users to understand, install, and use your project effectively!
